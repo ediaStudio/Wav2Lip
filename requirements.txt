@@ -1,3 +1,14 @@
+Flask
+gunicorn
+
+requests
+structlog==22.1.0
+
+google-auth
+
+google-cloud-storage
+
+Werkzeug==2.3.7
 librosa==0.9.1
 numpy==1.26.1
 opencv-contrib-python==4.8.1.78
@@ -6,3 +17,4 @@ torch==2.1.0
 torchvision==0.16.0
 tqdm==4.66.1
 numba==0.58.1
+
