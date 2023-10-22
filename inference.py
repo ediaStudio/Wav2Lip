@@ -52,11 +52,12 @@ parser.add_argument('--rotate', default=False, action='store_true',
 parser.add_argument('--nosmooth', default=False, action='store_true',
 					help='Prevent smoothing face detections over a short temporal window')
 
-args = parser.parse_args()
+# args = parser.parse_args()
+args, unknown = parser.parse_known_args()
 args.img_size = 96
 
 #TEST
-args.audio = 'game.wav'
+args.audio = 'test.mp3'
 args.face = 'm.jpeg'
 args.resize_factor = 2
 args.heckpoint_path = 'checkpoints/wav2lip_gan.pth'

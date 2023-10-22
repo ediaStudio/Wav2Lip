@@ -23,15 +23,25 @@ WORKDIR /usr/src/app
 # Copying this separately prevents re-running pip install on every code change.
 COPY requirements.txt ./
 
+RUN apt-get update && apt-get install -y python3-opencv
+RUN apt-get install -y ffmpeg
+RUN pip install opencv-python
+
 # Install dependencies.
 RUN pip install -r requirements.txt
 
 # Copy local code to the container image.
 COPY . ./
 
+# Copy the test.mp3 file to the container image's app directory.
+COPY m.jpeg ./
+COPY test.mp3 ./
+
+
 # Run the web service on container startup.
 # Use gunicorn webserver with one worker process and 8 threads.
 # For environments with multiple CPU cores, increase the number of workers
 # to be equal to the cores available.
 # Timeout is set to 0 to disable the timeouts of the workers to allow Cloud Run to handle instance scaling.
-CMD exec gunicorn --bind :$PORT --workers 1 --threads 8 --timeout 0 app:app
+CMD exec gunicorn --bind :$PORT --workers 4 --threads 8 --timeout 0 app:app
+# CMD ["gunicorn", "--bind", ":8080", "--workers", "1", "--threads", "8", "--timeout", "0", "app:app"]
