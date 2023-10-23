@@ -33,11 +33,6 @@ RUN pip install -r requirements.txt
 # Copy local code to the container image.
 COPY . ./
 
-# Copy the test.mp3 file to the container image's app directory.
-COPY m.jpeg ./
-COPY test.mp3 ./
-
-
 # Run the web service on container startup.
 # Use gunicorn webserver with one worker process and 8 threads.
 # For environments with multiple CPU cores, increase the number of workers

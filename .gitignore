@@ -11,3 +11,7 @@ evaluation/test_filelists/lr*.txt
 *.mkv
 *.gif
 *.webm
+*.mp3
+*.jpeg
+*.jpg
+*.pth

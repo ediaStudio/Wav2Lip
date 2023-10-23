@@ -8,6 +8,12 @@ import torch, face_detection
 from models import Wav2Lip
 import platform
 from google.cloud import storage
+import os
+
+audio_url = ""
+face_url = ""
+checkpoint_url = ""
+bucket_name = "mypythontest-402708_cloudbuild"
 
 parser = argparse.ArgumentParser(description='Inference code to lip-sync videos in the wild using Wav2Lip models')
 
@@ -52,17 +58,55 @@ parser.add_argument('--rotate', default=False, action='store_true',
 parser.add_argument('--nosmooth', default=False, action='store_true',
 					help='Prevent smoothing face detections over a short temporal window')
 
-# args = parser.parse_args()
+parser.add_argument('--img_size', type=int, default=96,
+					help='', required=False)
+
 args, unknown = parser.parse_known_args()
-args.img_size = 96
+print(args)
+# args.img_size = 96
 
-#TEST
-args.audio = 'test.mp3'
-args.face = 'm.jpeg'
-args.resize_factor = 2
-args.heckpoint_path = 'checkpoints/wav2lip_gan.pth'
 
-if os.path.isfile(args.face) and args.face.split('.')[1] in ['jpg', 'png', 'jpeg']:
+def init_variables(data):
+    global args, audio_url, face_url, checkpoint_url
+
+    print("data['audio_url']", data['audio_url'])
+    args.img_size = data['img_size']
+    checkpoint_url = data['checkpoint_url']
+    args.checkpoint_path = data['checkpoint_path']
+    args.face = data['face']
+    args.audio = data['audio']
+    face_url = data['face_url']
+    audio_url = data['audio_url']
+    args.outfile = data['outfile']
+    args.static = data['static']
+    args.fps = data['fps']
+    args.pads = data['pads']
+    args.face_det_batch_size = data['face_det_batch_size']
+    args.wav2lip_batch_size = data['wav2lip_batch_size']
+    args.resize_factor = data['resize_factor']
+    args.crop = data['crop']
+    args.box = data['box']
+    args.rotate = data['rotate']
+    args.nosmooth = data['nosmooth']
+
+def download_file_from_gcs(blob_name, destination_path):
+    # Initialisez le client GCS
+    client = storage.Client()
+
+    # Obtenez un référentiel du bucket GCS
+    bucket = client.bucket(bucket_name)
+
+    # Téléchargez le fichier depuis le bucket
+    blob = bucket.blob(blob_name)
+    blob.download_to_filename(destination_path)
+
+def is_running_in_gcp():
+    return 'GOOGLE_CLOUD_PROJECT' in os.environ
+
+if is_running_in_gcp():
+    download_file_from_gcs(checkpoint_url, args.checkpoint_path)
+
+if args.face and os.path.isfile(args.face) and args.face.split('.')[1] in ['jpg', 'png', 'jpeg']:
 	args.static = True
 
 def get_smoothened_boxes(boxes, T):
@@ -113,6 +157,7 @@ def face_detect(images):
 
 	del detector
 	return results
+
 
 def datagen(frames, mels):
 	img_batch, mel_batch, frame_batch, coords_batch = [], [], [], []
@@ -166,6 +211,7 @@ mel_step_size = 16
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 print('Using {} for inference.'.format(device))
 
+
 def _load(checkpoint_path):
 	if device == 'cuda':
 		checkpoint = torch.load(checkpoint_path)
@@ -173,6 +219,7 @@ def _load(checkpoint_path):
 		checkpoint = torch.load(checkpoint_path,
 								map_location=lambda storage, loc: storage)
 	return checkpoint
+
 
 def load_model(path):
 	model = Wav2Lip()
@@ -187,9 +234,9 @@ def load_model(path):
 	model = model.to(device)
 	return model.eval()
 
+
 def save_video_to_gcs():
     # Remplacez ces valeurs par les vôtres
-    bucket_name = "mypythontest-402708_cloudbuild"
     video_file_path = args.outfile  # Utilisez le chemin de sortie de la vidéo
     destination_blob_name = "bucket_ai/test/maVideo.mp4"
 
@@ -211,6 +258,11 @@ def save_video_to_gcs():
 
 
 def init_wave():
+
+	print("audio_url", audio_url)
+	download_file_from_gcs(audio_url, args.audio)
+	download_file_from_gcs(face_url, args.face)
+
 	if not os.path.isfile(args.face):
 		raise ValueError('--face argument must be a valid path to video/image file')
 

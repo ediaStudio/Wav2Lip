@@ -20,7 +20,7 @@ from flask import Flask, jsonify, request
 
 from utils.logging import logger
 
-from inference import init_wave
+from inference import init_wave, init_variables
 
 app = Flask(__name__)
 
@@ -41,7 +41,7 @@ def run_wav2lip():
         # Récupérez les données de la requête, par exemple, les paramètres pour exécuter votre code
         data = request.json
         print('data', data)
-
+        init_variables(data)
         # Appelez votre fonction de traitement (run_wav2lip_inference) avec les données de la requête
         result = init_wave()
 
