@@ -12,7 +12,7 @@ import os
 
 audio_url = ""
 face_url = ""
-checkpoint_url = ""
+checkpoint_url = "bucket_ai/test/wav2lip_gan.pth"
 bucket_name = "mypythontest-402708_cloudbuild"
 
 parser = argparse.ArgumentParser(description='Inference code to lip-sync videos in the wild using Wav2Lip models')
@@ -100,11 +100,8 @@ def download_file_from_gcs(blob_name, destination_path):
     blob = bucket.blob(blob_name)
     blob.download_to_filename(destination_path)
 
-def is_running_in_gcp():
-    return 'GOOGLE_CLOUD_PROJECT' in os.environ
-
-if is_running_in_gcp():
-    download_file_from_gcs(checkpoint_url, args.checkpoint_path)
+if not os.path.isfile(args.checkpoint_path):
+	download_file_from_gcs(checkpoint_url, args.checkpoint_path)
 
 if args.face and os.path.isfile(args.face) and args.face.split('.')[1] in ['jpg', 'png', 'jpeg']:
 	args.static = True

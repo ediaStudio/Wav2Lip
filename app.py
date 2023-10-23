@@ -22,6 +22,8 @@ from utils.logging import logger
 
 from inference import init_wave, init_variables
 
+API_KEY = "gT7pL9sRdN2bW6aZ4cY3"
+
 app = Flask(__name__)
 
 
@@ -38,11 +40,20 @@ def hello() -> str:
 @app.route('/run_wav2lip', methods=['POST'])
 def run_wav2lip():
     try:
+        # Vérifiez si la clé API a été fournie dans l'en-tête de la requête
+        if 'Authorization' not in request.headers:
+            return jsonify({'error': 'Not allowed'}), 401
+
+        api_key = request.headers['Authorization']
+
+        # Vérifiez si la clé API fournie correspond à la clé API secrète
+        if api_key != API_KEY:
+            return jsonify({'error': 'Clé API non valide'}), 403
+
         # Récupérez les données de la requête, par exemple, les paramètres pour exécuter votre code
         data = request.json
         print('data', data)
         init_variables(data)
-        # Appelez votre fonction de traitement (run_wav2lip_inference) avec les données de la requête
         result = init_wave()
 
         # Retournez la réponse au format JSON
